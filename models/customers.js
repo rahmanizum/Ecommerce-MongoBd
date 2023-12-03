@@ -7,7 +7,7 @@ class Customer {
         this.phonenumber = phonenumber;
         this.password = password;
         this._id= id ? new ObjectId(id):null;
-
+        this.cart = {items:[]};
     }
     save(){
         let db = getDb();
@@ -20,6 +20,11 @@ class Customer {
     static fetchById(_id){
         const db = getDb();
         return db.collection('customer').findOne({ _id: new ObjectId(_id) });
+    }
+    static addtoCart(customerId,items){
+        const db = getDb();
+        return db.collection("customer")
+        .updateOne({_id : new ObjectId(customerId)},{$set:{ "cart.items":items }});
     }
 }
 

@@ -1,7 +1,6 @@
 
 const Customer = require('../models/customers');
 const Product = require('../models/product');
-// const Cart = require('../models/cart');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET_KEY;
@@ -84,22 +83,28 @@ exports.getProduct = async (request, response, next) => {
     }
 }
 
-exports.handleAddToCart = async (request, response, next) => {
+exports.addToCart = async (request, response, next) => {
     try {
-        const productId = request.params.productId;
-        let newQuantity = 1;
-        const cart = await request.customer.getCart();
-        const uniqueProduct = await Product.findByPk(productId);
+        const {customerId} = request;
+        const {productId }= request.params;
+        const { cart }= await Customer.fetchById(customerId);
+        const {productName,productPrice }= await Product.fetchProduct(productId);
         // Check if product already exists in cart
-        const cartProduct = await cart.getProducts({ where: { id: productId } });
+        const { items }= cart
         // If product doesn't exist in cart, create a new cart item
-        if (!cartProduct[0]) {
-            cart.addProduct(uniqueProduct, { through: { quantity: newQuantity } });
+        let itemIndex = items.findIndex(ele=> ele.productId == productId)
+        if (items.length==0||itemIndex==-1) {
+            items.push({
+                productId,
+                productName,
+                productPrice,
+                quantity:1
+            })
+            await Customer.addtoCart(customerId,items)
         }
         else {
-            const oldQuantity = cartProduct[0].CartItem.quantity;
-            newQuantity = oldQuantity + 1;
-            cart.addProduct(uniqueProduct, { through: { quantity: newQuantity } });
+            items[itemIndex].quantity += 1;
+            await Customer.addtoCart(customerId,items)
         }
         return response.status(201).json({ message: "Product successfully added to cart" });
 
@@ -111,21 +116,17 @@ exports.handleAddToCart = async (request, response, next) => {
 
 exports.getShoppingCart = async (request, response, next) => {
     try {
-        const customer = request.customer;
-        const shoppingCart = await customer.getCart();
-        const productsInCart = await shoppingCart.getProducts({
-            attributes: ['id', 'productName', 'productPrice',],
-        });
-        const products = productsInCart.map(product => {
-            const cartItem = product.CartItem;
+        const {customerId} = request;
+        const { cart }= await Customer.fetchById(customerId);
+        const { items }= cart
+        const products = items.map((ele)=>{
             return {
-                id: product.id,
-                productName: product.productName,
-                productPrice: product.productPrice,
-                quantity: cartItem.quantity
-            };
-        });
-
+                id: ele.productId,
+                productName: ele.productName,
+                productPrice: ele.productPrice,
+                quantity: ele.quantity
+            }
+        })
         return response.status(201).json({ products, message: 'Successfully retrieved shopping Cart' });
     } catch (error) {
         console.log(error);
@@ -134,16 +135,18 @@ exports.getShoppingCart = async (request, response, next) => {
 }
 
 exports.deceaseFromCart = async (request, response, next) => {
-    const productId = request.params.productId;
     try {
-        const cart = await request.customer.getCart();
-        const product = await cart.getProducts({ where: { id: productId } });
-        if (product[0].CartItem.quantity > 1) {
-            let newQuantity = product[0].CartItem.quantity - 1;
-            cart.addProduct(product[0], { through: { quantity: newQuantity } });
+        const {productId} = request.params;
+        const {customerId} = request;
+        const { cart: { items } } = await Customer.fetchById(customerId);
+        let itemIndex = items.findIndex(ele=> ele.productId == productId)
+        if (items[itemIndex].quantity > 1) {
+            items[itemIndex].quantity-= 1;
+            await Customer.addtoCart(customerId,items)
             return response.status(201).json({ message: "Product Quantity updated successfully" });
         } else {
-            await product[0].CartItem.destroy();
+            items.splice(itemIndex,1);
+            await Customer.addtoCart(customerId,items)
             return response.status(201).json({ message: "Product removed from cart" })
         }
 
@@ -167,11 +170,13 @@ exports.increaseFromCart = async (request, response, next) => {
     }
 }
 exports.deleteFromCart = async (request, response, next) => {
-    const productId = request.params.productId;
     try {
-        const cart = await request.customer.getCart();
-        const product = await cart.getProducts({ where: { id: productId } });
-        await product[0].CartItem.destroy();
+        const {productId} = request.params;
+        const {customerId} = request;
+        const { cart: { items } } = await Customer.fetchById(customerId);
+        let itemIndex = items.findIndex(ele=> ele.productId == productId);
+        items.splice(itemIndex,1);
+        await Customer.addtoCart(customerId,items)
         return response.status(201).json({ message: "Product removed successfully" });
 
     } catch (error) {

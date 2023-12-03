@@ -76,7 +76,7 @@ async function onDetails(e) {
         e.preventDefault();
         const productId = e.target.id
         const response = await axios.get(`customer/get-product/${productId}`)
-        const { id, productName, productQuantity, productPrice, productDescription, imageUrl } = response.data.product;
+        const { _id, productName, productQuantity, productPrice, productDescription, imageUrl } = response.data.product;
         modalPlaceholder.innerHTML = `
     <div class="modal-header d-flex justify-content-center">
         <h5 class="modal-title" id="productModalLabel">${productName}</h5>
@@ -96,7 +96,7 @@ async function onDetails(e) {
     </div>
     <div class="modal-footer d-flex justify-content-center">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-outline-success add-btn" id ="${id}">Add to Cart</button>
+        <button type="button" class="btn btn-outline-success add-btn" id ="${_id}">Add to Cart</button>
     </div>`
         $('#productModal').modal('show');
     } catch (error) {
