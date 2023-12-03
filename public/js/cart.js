@@ -83,9 +83,7 @@ async function onDeleteFromCart(e) {
 async function onCheckOut(e) {
     try {
         e.preventDefault();
-        console.log("started");
         const response = await axios.post('payment/create-order');
-        console.log(response);
         const { key_id, orderid } = response.data;
         const { name, email, phonenumber } = response.data.customer;
         var options = {

@@ -24,7 +24,6 @@ async function on_adminSignup(e) {
                     phonenumber: adminSignupElements.phoneNo.value,
                     password: adminSignupElements.password1.value
                 }
-                console.log(data);
                 await axios.post("admin/signup", data);
                 adminsignup_form.reset();
                 helperFunctions.alertFunction(adminSignupElements.alert3);

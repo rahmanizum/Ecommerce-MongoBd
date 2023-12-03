@@ -98,7 +98,6 @@ async function onDeleteProduct(e) {
     try {
         e.preventDefault();
         const productId = e.target.id
-        console.log(productId);
         await axios.delete(`admin/delete/${productId}`)
         alert('Product successfully deleted')
         refresh();
@@ -119,9 +118,7 @@ async function onAddproduct(e) {
                 productDescription: productFormElements.description.value,
                 imageUrl: productFormElements.imageUrl.value || Math.floor(Math.random() * 10)
             }
-            console.log(data);
             if (productId) {
-                console.log(data);
                 const response = await axios.put(`admin/update-product/${productId}`, data)
                 addproduct_form.reset();
                 helperFunctions.alertFunction(productFormElements.alert2);
