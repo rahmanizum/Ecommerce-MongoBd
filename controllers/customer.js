@@ -156,12 +156,13 @@ exports.deceaseFromCart = async (request, response, next) => {
     }
 }
 exports.increaseFromCart = async (request, response, next) => {
-    const productId = request.params.productId;
     try {
-        const cart = await request.customer.getCart();
-        const product = await cart.getProducts({ where: { id: productId } });
-        let newQuantity = product[0].CartItem.quantity + 1;
-        cart.addProduct(product[0], { through: { quantity: newQuantity } });
+        const {productId} = request.params;
+        const {customerId} = request;
+        const { cart: { items } } = await Customer.fetchById(customerId);
+        let itemIndex = items.findIndex(ele=> ele.productId == productId);
+        items[itemIndex].quantity += 1;
+        await Customer.addtoCart(customerId,items)
         return response.status(201).json({ message: "Product Quantity updated successfully" });
 
     } catch (error) {
@@ -186,30 +187,19 @@ exports.deleteFromCart = async (request, response, next) => {
 }
 exports.getOrderHistory = async (request, response, next) => {
     try {
-        const Allorders = await request.customer.getOrders({
-            attributes: ['id', 'date', 'status'],
-            include: [
-                {
-                    model: Product,
-                    attributes: ['productName', 'productPrice'],
-                },
-            ],
-            where: {
-                status: "Successful",
-            }
-        });
-        const orders = Allorders.map((order) => {
-            const products = order.Products.map((product) => {
-                const orderItem = product.OrderItem;
+        const {customerId} = request;
+        const { order: { order_items } } = await Customer.fetchById(customerId);
+        const orders = order_items.filter((ele=>ele.status=="Successfull")).map((order) => {
+            const products = order.products.map((product) => {
                 return {
                     productName: product.productName,
                     productPrice: product.productPrice,
-                    quantity: orderItem.quantity
+                    quantity: product.quantity
                 }
             });
             return {
-                id: order.id,
-                date: order.date,
+                id: order.order_id,
+                date: order.createdAt,
                 Products: products
             }
         })

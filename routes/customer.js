@@ -13,9 +13,9 @@ router.get('/get-products',authMiddleware.verifyAuthorization,customerController
 router.get('/get-product/:productId',authMiddleware.verifyAuthorization,customerController.getProduct);
 router.post('/add-to-cart/:productId', authMiddleware.verifyAuthorization, customerController.addToCart);
 router.put('/decrease-from-cart/:productId',authMiddleware.verifyAuthorization,customerController.deceaseFromCart);
-// router.put('/increase-from-cart/:productId',authMiddleware.verifyAuthorization,customerController.increaseFromCart);
+router.put('/increase-from-cart/:productId',authMiddleware.verifyAuthorization,customerController.increaseFromCart);
 router.delete('/delete-from-cart/:productId',authMiddleware.verifyAuthorization,customerController.deleteFromCart);
-// router.get('/get-orders',authMiddleware.verifyAuthorization,customerController.getOrderHistory);
+router.get('/get-orders',authMiddleware.verifyAuthorization,customerController.getOrderHistory);
 router.get('/get-cart', authMiddleware.verifyAuthorization, customerController.getShoppingCart);
 
 

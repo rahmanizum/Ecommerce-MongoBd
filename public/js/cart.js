@@ -126,7 +126,7 @@ async function onCheckOut(e) {
 
         } else {
             alert(error.response.data.message);
-            window.location = '/';
+            // window.location = '/';
         }
     }
 }

@@ -8,6 +8,7 @@ class Customer {
         this.password = password;
         this._id= id ? new ObjectId(id):null;
         this.cart = {items:[]};
+        this.order = {order_items:[]}
     }
     save(){
         let db = getDb();
@@ -25,6 +26,20 @@ class Customer {
         const db = getDb();
         return db.collection("customer")
         .updateOne({_id : new ObjectId(customerId)},{$set:{ "cart.items":items }});
+    }
+    static createOrder(customerId,order){
+        const db = getDb();
+        return db.collection("customer")
+        .updateOne({_id : new ObjectId(customerId)},{$push:{ "order.order_items":order }});   
+    }
+    static getOrderById(ordr_id){
+        const db = getDb();
+        return db.collection("customer").findOne()
+    }
+    static updateOrder(customerId,orders){
+        const db = getDb();
+        return db.collection("customer")
+        .updateOne({_id : new ObjectId(customerId)},{$set:{ "order.order_items":orders }});   
     }
 }
 
