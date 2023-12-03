@@ -116,7 +116,7 @@ async function refresh() {
         showOutput(products);
     } catch (error) {
         alert(error.response.data.message);
-        // window.location = '/';
+        window.location = '/';
     }
 }
 

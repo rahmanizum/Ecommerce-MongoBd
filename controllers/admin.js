@@ -12,7 +12,7 @@ exports.adminHomePage = (request, response, next) => {
 exports.adminSignup = async (request, response, next) => {
     try {
         const { name, email, phonenumber, password } = request.body;
-        let adminExist = await Admin.fetchAdmin(email);
+        let adminExist = await Admin.fetchByEmail(email);
         if (!adminExist) {
             const hash = await bcrypt.hash(password, 10);
             const admin = new Admin(name, email, phonenumber, hash)
@@ -24,10 +24,6 @@ exports.adminSignup = async (request, response, next) => {
         } else {
             return response.status(409).json({ message: 'Email or Phone Number already exist!' })
         }
-            const hash = await bcrypt.hash(password, 10);
-            const adminObj = new Admin(name,email,phonenumber,hash);
-            await adminObj.save();
-            return response.status(201).json({ message: "Admin Account created successfully" });
     } catch (error) {
         console.log(error);
     }
@@ -35,7 +31,7 @@ exports.adminSignup = async (request, response, next) => {
 exports.adminSignin = async (request, response, next) => {
     try {
         const { email, password } = request.body;
-         let adminExist = await Admin.fetchAdmin(email);
+         let adminExist = await Admin.fetchByEmail(email);
         if (adminExist) {
             const isPasswordValid = await bcrypt.compare(password, adminExist.password);
             if (isPasswordValid) {

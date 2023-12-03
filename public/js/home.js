@@ -191,6 +191,7 @@ async function adminForgotpassword(e) {
             helperFunctions.alertFunction(adminForgotModalELements.alert2);
             setTimeout(()=>{
                 $('#adminforgotdModal').modal('hide');
+                adminforgot_form.reset();
             },1500)
         }
 
@@ -227,6 +228,7 @@ async function customerForgotPassword(e) {
             helperFunctions.alertFunction(customerForgotModalELements.alert2);
             setTimeout(()=>{
                 $('#customerforgotdModal').modal('hide');
+                customerforgot_form.reset();
             },1500)
         }
     } catch (error) {

@@ -77,6 +77,6 @@ async function onOrderPageBtnClick(e) {
         const response = await axios.get('customer/get-orders');
         showOtrderHistory(response.data.orders);
     } catch (error) {
-
+        console.log(error);
     }
 }

@@ -1,6 +1,6 @@
 const Customer = require('../models/customers');
 const Admin = require('../models/admins');
-const ForgotPasswords = require('../models/forgot-password');
+const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Sib = require('sib-api-v3-sdk');
 const client = Sib.ApiClient.instance;
@@ -9,13 +9,9 @@ const tranEmailApi = new Sib.TransactionalEmailsApi();
 
 exports.adminResetpasswordMail = async (request, response, next) => {
     try {
-        
+
         const { email } = request.body;
-        const admin= await Admin.findOne({
-            where: {
-                email: email
-            }
-        });
+        const admin = await Admin.fetchByEmail(email);
         if (admin) {
             const sender = {
                 email: 'ramanizum@gmail.com',
@@ -26,8 +22,12 @@ exports.adminResetpasswordMail = async (request, response, next) => {
                     email: email
                 }
             ]
-            const resetresponse = await admin.createForgotpassword({});
-            const { id } = resetresponse;
+            const newUUID = uuidv4();
+            await Admin.createForgotPassword(admin._id, {
+                forgotId: newUUID,
+                isActive: true,
+                createdAt: new Date()
+            });
             const mailresponse = await tranEmailApi.sendTransacEmail({
                 sender,
                 to: receivers,
@@ -57,7 +57,7 @@ exports.adminResetpasswordMail = async (request, response, next) => {
                     </body>
                     </html>`,
                 params: {
-                    role: id
+                    role: newUUID
                 }
             })
             response.status(200).json({ message: 'Password reset email sent' });
@@ -73,12 +73,13 @@ exports.adminResetpasswordMail = async (request, response, next) => {
 }
 exports.adminResetpasswordform = async (request, response, next) => {
     try {
-        let forgotId = request.params.forgotId;
-        const passwordreset = await ForgotPasswords.findByPk(forgotId);
-        if (passwordreset.isactive) {
-            passwordreset.isactive = false;
-            await passwordreset.save();
-            response.sendFile('reset.html',{root:'views/admin'})
+        const { forgotId } = request.params;
+        const  admin  = await Admin.fetchByForgotId(forgotId);
+        const { forgotPassword } = admin;
+        if (forgotPassword.isActive) {
+            forgotPassword.isActive = false;
+            await Admin.updateForgotPassword(admin._id,forgotPassword)
+            response.sendFile('reset.html', { root: 'views/admin' })
         } else {
             return response.status(401).json({ message: "Link has been expired" })
         }
@@ -91,27 +92,19 @@ exports.adminResetpasswordform = async (request, response, next) => {
 exports.adminResetpassword = async (request, response, next) => {
     try {
         const { resetid, newpassword } = request.body;
-        const passwordreset = await ForgotPasswords.findByPk(resetid);
+        const  admin  = await Admin.fetchByForgotId(resetid);
+        const { forgotPassword } = admin;
         const currentTime = new Date();
-        const createdAtTime = new Date(passwordreset.createdAt);
+        const createdAtTime = new Date(forgotPassword.createdAt);
         const timeDifference = currentTime - createdAtTime;
-        const timeLimit = 5 * 60 * 1000; 
-        if(timeDifference <= timeLimit){
+        const timeLimit = 5 * 60 * 1000;
+        if (timeDifference <= timeLimit) {
             const hashedPassword = await bcrypt.hash(newpassword, 10);
-           await Admin.update(
-                {
-                    password: hashedPassword
-                },
-                {
-                    where: { id: passwordreset.AdminId }
-                }
-            );
+            await Admin.updatePassword(admin._id,hashedPassword)
             response.status(200).json({ message: "Password reset successful." });
-        }else{
-            response.status(403).json({ message: "Link has expired Generate a new link"});
+        } else {
+            response.status(403).json({ message: "Link has expired Generate a new link" });
         }
-
-
 
     } catch (error) {
         console.error("Error resetting password:", error);
@@ -120,13 +113,10 @@ exports.adminResetpassword = async (request, response, next) => {
 };
 
 exports.customerResetpasswordMail = async (request, response, next) => {
-    try {;
+    try {
+        ;
         const { email } = request.body;
-        const customer= await Customer.findOne({
-            where: {
-                email: email
-            }
-        });
+        const customer = await Customer.fetchCustomer(email);
         if (customer) {
             const sender = {
                 email: 'ramanizum@gmail.com',
@@ -137,8 +127,12 @@ exports.customerResetpasswordMail = async (request, response, next) => {
                     email: email
                 }
             ]
-            const resetresponse = await customer.createForgotpassword({});
-            const { id } = resetresponse;
+            const newUUID = uuidv4();
+            await Customer.createForgotPassword(customer._id, {
+                forgotId: newUUID,
+                isActive: true,
+                createdAt: new Date()
+            });
             const mailresponse = await tranEmailApi.sendTransacEmail({
                 sender,
                 to: receivers,
@@ -168,7 +162,7 @@ exports.customerResetpasswordMail = async (request, response, next) => {
                     </body>
                     </html>`,
                 params: {
-                    role: id
+                    role: newUUID
                 }
             })
             response.status(200).json({ message: 'Password reset email sent' });
@@ -184,11 +178,12 @@ exports.customerResetpasswordMail = async (request, response, next) => {
 }
 exports.customerResetpasswordform = async (request, response, next) => {
     try {
-        let forgotId = request.params.forgotId;
-        const passwordreset = await ForgotPasswords.findByPk(forgotId);
-        if (passwordreset.isactive) {
-            passwordreset.isactive = false;
-            await passwordreset.save();
+        const { forgotId } = request.params;
+        const  customer  = await Customer.fetchByForgotId(forgotId);
+        const { forgotPassword } = customer;
+        if (forgotPassword.isActive) {
+            forgotPassword.isActive = false;
+            await Customer.updateForgotPassword(customer._id,forgotPassword)
             response.sendFile('reset.html', { root: 'views/customer' })
         } else {
             return response.status(401).json({ message: "Link has been expired" })
@@ -201,26 +196,18 @@ exports.customerResetpasswordform = async (request, response, next) => {
 exports.customerResetpassword = async (request, response, next) => {
     try {
         const { resetid, newpassword } = request.body;
-        console.log(resetid,newpassword);
-        const passwordreset = await ForgotPasswords.findByPk(resetid);
+        const  customer = await Customer.fetchByForgotId(resetid);
+        const { forgotPassword } = customer;
         const currentTime = new Date();
-        const createdAtTime = new Date(passwordreset.createdAt);
+        const createdAtTime = new Date(forgotPassword.createdAt);
         const timeDifference = currentTime - createdAtTime;
-        const timeLimit = 5 * 60 * 1000; 
-        if(timeDifference <= timeLimit){
+        const timeLimit = 5 * 60 * 1000;
+        if (timeDifference <= timeLimit) {
             const hashedPassword = await bcrypt.hash(newpassword, 10);
-          const res =  await Customer.update(
-                {
-                    password: hashedPassword
-                },
-                {
-                    where: { id: passwordreset.CustomerId }
-                }
-            );
-            console.log(res);
+            await Customer.updatePassword(customer._id,hashedPassword)
             response.status(200).json({ message: "Password reset successful." });
-        }else{
-            response.status(403).json({ message: "Link has expired Generate a new link"});
+        } else {
+            response.status(403).json({ message: "Link has expired Generate a new link" });
         }
 
 

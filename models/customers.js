@@ -9,6 +9,7 @@ class Customer {
         this._id= id ? new ObjectId(id):null;
         this.cart = {items:[]};
         this.order = {order_items:[]}
+        this.forgotPassword = {};
     }
     save(){
         let db = getDb();
@@ -40,6 +41,22 @@ class Customer {
         const db = getDb();
         return db.collection("customer")
         .updateOne({_id : new ObjectId(customerId)},{$set:{ "order.order_items":orders }});   
+    }
+    static createForgotPassword(_id, obj) {
+        const db = getDb();
+        return db.collection('customer').updateOne({ _id }, { $set: { "forgotPassword": obj } })
+    }
+    static updateForgotPassword(_id, obj) {
+        const db = getDb();
+        return db.collection('customer').updateOne({ _id }, { $set: { "forgotPassword": obj } })
+    }
+    static updatePassword(_id, password) {
+        const db = getDb();
+        return db.collection('customer').updateOne({ _id }, { $set: { "password": password } })
+    }
+    static fetchByForgotId(forgotId) {
+        const db = getDb();
+        return db.collection('customer').findOne({ "forgotPassword.forgotId": forgotId });
     }
 }
 

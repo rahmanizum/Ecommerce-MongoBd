@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/signup',customerController.customerSignup);
 router.post('/signin',customerController.CustomerSignin);
-router.get('',authMiddleware.verifyAuthorization,customerController.customerHomePage);
+router.get('',customerController.customerHomePage);
 router.get('/get-products',authMiddleware.verifyAuthorization,customerController.getProducts);
 router.get('/get-product/:productId',authMiddleware.verifyAuthorization,customerController.getProduct);
 router.post('/add-to-cart/:productId', authMiddleware.verifyAuthorization, customerController.addToCart);

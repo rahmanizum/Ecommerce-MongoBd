@@ -52,7 +52,7 @@ async function onDecreaseQuantity(e) {
         showShoppingCart(response.data.products);
 
     } catch (error) {
-
+        console.log(error);
     }
 }
 async function onIncreaseQuantity(e) {
@@ -64,7 +64,7 @@ async function onIncreaseQuantity(e) {
         showShoppingCart(response.data.products);
 
     } catch (error) {
-
+        console.log(error);
     }
 }
 
@@ -126,7 +126,7 @@ async function onCheckOut(e) {
 
         } else {
             alert(error.response.data.message);
-            // window.location = '/';
+            window.location = '/';
         }
     }
 }
