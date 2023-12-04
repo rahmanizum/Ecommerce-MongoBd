@@ -33,10 +33,6 @@ class Customer {
         return db.collection("customer")
         .updateOne({_id : new ObjectId(customerId)},{$push:{ "order.order_items":order }});   
     }
-    static getOrderById(ordr_id){
-        const db = getDb();
-        return db.collection("customer").findOne()
-    }
     static updateOrder(customerId,orders){
         const db = getDb();
         return db.collection("customer")
